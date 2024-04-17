@@ -50,3 +50,7 @@ sqoop import-all-tables --connect jdbc:postgresql://hadoop-04.uni.innopolis.ru/t
 # move avsc and java files to output folder
 mv *.avsc output/
 mv *.java output/
+
+# put avsc schemas to hdfs
+hdfs dfs -mkdir -p project/warehouse/avsc
+hdfs dfs -put output/*.avsc project/warehouse/avsc
