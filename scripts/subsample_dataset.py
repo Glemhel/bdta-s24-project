@@ -11,4 +11,4 @@ SEED = 42
 
 df = pd.read_csv(DATA_INPUT_PATH, header=0)
 df_sampled = df.sample(n=SAMPLE_SIZE, random_state=SEED)
-df_sampled.to_csv(DATA_OUTPUT_PATH, index=False)
+df_sampled.to_csv(DATA_OUTPUT_PATH)
