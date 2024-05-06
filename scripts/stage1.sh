@@ -8,7 +8,7 @@ rm -rf data/*.zip
 rm -rf data/*.csv
 
 # download archive from my link
-url="https://disk.yandex.ru/d/DXY2kxm00i-Alg"
+url="https://disk.yandex.ru/d/SSSBLNBeue2-uw"
 
 wget "$(yadisk-direct $url)" -O data/data.zip
 
@@ -17,6 +17,16 @@ unzip data/data.zip -d data/
 
 # remove zip just in case
 rm data/data.zip
+
+
+###################################
+#     SUBSAMPLING THE DATASET     #
+###################################
+
+python3 scripts/subsample_dataset.py
+
+# remove the full version
+rm -rf data/*500k.csv
 
 ####################################
 # IMPORTING DATABASE TO PostgreSQL #
@@ -30,14 +40,12 @@ python3 scripts/build_projectdb.py
 #     IMPORT TO HDFS VIA SQOOP     #
 ####################################
 
-# drop old sqoop files from root folder and output
-rm -r ./*.avsc
-rm -r ./*.avsc
+# drop old sqoop files from root output
 rm -r output/*.avsc
 rm -r output/*.java
 
 # delete folders from hdfs
-hdfs dfs -rm -r project/warehouse
+hdfs dfs -rm -r project/
 
 # read password
 sqoop_password=$(head -n 1 secrets/.psql.pass)
