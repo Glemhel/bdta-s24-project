@@ -1,5 +1,8 @@
-import pandas as pd
+"""
+Subsample US accidents dataset to lower size.
+"""
 import os
+import pandas as pd
 
 DATA_INPUT_PATH = os.path.join("data", "US_Accidents_March23_sampled_500k.csv")
 DATA_OUTPUT_PATH = os.path.join("data", "US_Accidents_sampled_110k.csv")
