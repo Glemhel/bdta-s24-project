@@ -28,8 +28,8 @@ CREATE EXTERNAL TABLE us_accidents1 (
     id_str STRING,
     source STRING,
 --    severity INT,
-    start_time date,
-    end_time date,
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
     start_lat DOUBLE,
     start_lng DOUBLE,
     end_lat DOUBLE,
@@ -80,8 +80,8 @@ CREATE EXTERNAL TABLE us_accidents1 (
 -- insert data from unpartitioned table
 INSERT INTO us_accidents1
 SELECT id, id_str, source,
-       from_unixtime(CAST(start_time/1000 AS BIGINT)) AS start_time, 
-       from_unixtime(CAST(end_time/1000 AS BIGINT)) AS end_time, 
+       start_time,
+       end_time,
        start_lat, start_lng, end_lat,
        end_lng, distance_mi, description, street, city, county,
        state, zipcode, country, timezone, airport_code, weather_timestamp,
