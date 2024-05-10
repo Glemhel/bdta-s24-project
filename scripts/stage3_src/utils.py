@@ -40,7 +40,7 @@ def lat_lon_to_ecef(lat: float, lon: float, axis: str) -> float:
     lon_cos = math.cos(lon_rad)
 
     # Calculate the radius of curvature in the prime vertical
-    prime_vertical_radius = WGS84_A_DIAM / math.sqrt(1 - WGS84_E_SQUARED * lat_sin ** 2)
+    prime_vertical_radius = WGS84_A_DIAM / math.sqrt(1 - WGS84_E_SQUARED * lat_sin**2)
 
     # Calculate ECEF coordinates
     x_cord = prime_vertical_radius * lat_cos * lon_cos
@@ -92,12 +92,9 @@ def save_dataset(dataset: DataFrame, name: str) -> None:
         dataset (DataFrame): The Spark DataFrame to save.
         name (str): The name of the dataset.
     """
-    dataset.select("features", "label") \
-        .coalesce(1) \
-        .write \
-        .mode("overwrite") \
-        .format("json") \
-        .save(f"project/data/{name}")
+    dataset.select("features", "label").coalesce(1).write.mode("overwrite").format(
+        "json"
+    ).save(f"project/data/{name}")
 
     # Consolidate the JSON file to local storage
     run_os_command(f"hdfs dfs -cat project/data/{name}/*.json > data/{name}.json")
