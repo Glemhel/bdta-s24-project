@@ -180,5 +180,5 @@ LOCATION 'project/hive/warehouse/evaluation_results'
 df_comparison.coalesce(1).write.mode("overwrite").saveAsTable("team2_projectdb.evaluation_results")
 
 run_os_command(
-    "hdfs dfs -cat project/output/evaluation.csv/*.csv > output/evaluation.csv"
+    "hdfs dfs -cat project/output/evaluation/*.csv > output/evaluation.csv"
 )
