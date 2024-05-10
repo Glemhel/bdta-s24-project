@@ -33,9 +33,9 @@ def make_model1(total_features=197):
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [total_features])
-    #    .addGrid(log_reg.aggregationDepth, [2, 3, 4])
-    #    .addGrid(log_reg.regParam, [0, 0.001, 0.1, 1])
+        grid.addGrid(pca.k, [30, total_features])
+       .addGrid(log_reg.aggregationDepth, [2, 3, 4])
+       .addGrid(log_reg.regParam, [0, 0.1, 1])
        .build()
     )
 
@@ -59,9 +59,9 @@ def make_model2(total_features=197):
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [total_features])
-    #   .addGrid(dtc.maxDepth, [5, 10])
-    #   .addGrid(dtc.impurity, ["gini", "entropy"])
+        grid.addGrid(pca.k, [30, total_features])
+      .addGrid(dtc.maxDepth, [10, 20])
+      .addGrid(dtc.impurity, ["gini", "entropy"])
       .build()
     )
 
@@ -85,10 +85,9 @@ def make_model3(total_features=197):
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [total_features])
-        # .addGrid(rfc.maxDepth, [5, 10])
-        # .addGrid(rfc.numTrees, [5, 10])
-        # .addGrid(rfc.impurity, ["gini", "entropy"])
+        grid.addGrid(pca.k, [30, total_features])
+        .addGrid(rfc.maxDepth, [5, 10])
+        .addGrid(rfc.impurity, ["gini", "entropy"])
         .build()
     )
 
@@ -113,9 +112,9 @@ def make_model4(total_features=197):
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [total_features])
-    #    .addGrid(log_reg.aggregationDepth, [2, 3, 4])
-    #    .addGrid(log_reg.regParam, [0, 0.001, 0.1, 1])
+        grid.addGrid(pca.k, [30, total_features])
+       .addGrid(log_reg.aggregationDepth, [2, 4])
+       .addGrid(log_reg.regParam, [0, 0.1, 1])
         .build()
     )
 
