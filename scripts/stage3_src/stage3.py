@@ -18,9 +18,7 @@ from modeling import (
     evaluate_model,
     print_and_save_model,
 )
-from utils import run_os_command
-
-from utils import save_dataset
+from data_utils import run_os_command, save_dataset
 
 # Add here your team number teamx
 TEAM = 2
@@ -38,6 +36,10 @@ spark = (
     .getOrCreate()
 )
 
+spark.sparkContext.addPyFile("data_utils.py")
+spark.sparkContext.addPyFile("modeling.py")
+spark.sparkContext.addPyFile("data_preparation.py")
+
 spark.sql("USE team2_projectdb;")
 
 # load dataset from the hdfs
@@ -53,8 +55,8 @@ train = processed_dataset.sampleBy(
 test = processed_dataset.subtract(train)
 
 # save dataset
-save_dataset(train)
-save_dataset(test)
+save_dataset(train, "train")
+save_dataset(test, "test")
 
 # create models
 # Model1: PCA + logistic regression
@@ -108,7 +110,7 @@ best_models = []
 
 # Train models via CV and select the best ones
 for model, grid in zip(models_list, models_grids):
-    best_models.append(train_model_cv(train, model, grid))
+    best_models.append(train_model_cv(train, model, grid, evaluatorWeightedF))
 
 evaluations = []
 # Evaluate models and save to hdfs

@@ -3,6 +3,7 @@ Data preparation utils for the modeling stage.
 """
 
 import math
+from pyspark import keyword_only
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
     dayofweek,
@@ -28,16 +29,16 @@ from pyspark.ml.param.shared import (
 )
 from pyspark.sql.functions import lit
 
-from utils import ecef_udf_currying
+from data_utils import ecef_udf_currying
 
 
 class CategoryClipTransformer(
     Transformer, HasInputCol, HasOutputCol, DefaultParamsReadable, DefaultParamsWritable
-):
+): # pylint: disable=too-many-ancestors
     """
     A transformer to clip categories based on a threshold.
 
-    Args:
+    Parameters:
         input_col (str): Name of the input column.
         output_col (str): Name of the output column.
         threshold (int): Threshold value for clipping.
@@ -47,53 +48,58 @@ class CategoryClipTransformer(
     """
 
     input_col = Param(
-        Params._dummy(),
+        Params._dummy(), # pylint: disable=protected-access
         "input_col",
         "Name of the input column.",
         typeConverter=TypeConverters.toString,
     )
     output_col = Param(
-        Params._dummy(),
+        Params._dummy(), # pylint: disable=protected-access
         "output_col",
         "Name of the output column.",
         typeConverter=TypeConverters.toString,
     )
     threshold = Param(
-        Params._dummy(),
+        Params._dummy(), # pylint: disable=protected-access
         "threshold",
         "Threshold value for clipping.",
         typeConverter=TypeConverters.toInt,
     )
 
+    _input_kwargs = {}
+
+    @keyword_only
     def __init__(
         self, input_col: str = "input", output_col: str = "output", threshold: int = 20
     ):
         """
         Initialize the transformer with default parameters.
 
-        Args:
+        Parameters:
             input_col (str): Name of the input column.
             output_col (str): Name of the output column.
             threshold (int): Threshold value for clipping.
         """
-        super(CategoryClipTransformer, self).__init__()
-        self._setDefault(input_col=None, output_col=None, threshold=threshold)
+        super(CategoryClipTransformer, self).__init__() # pylint: disable=super-with-arguments
+        self._setDefault(
+            input_col=input_col,
+            output_col=output_col,
+            threshold=threshold
+        )
         kwargs = self._input_kwargs
         self.set_params(**kwargs)
 
-    def set_params(
-        self, input_col: str = "input", output_col: str = "output", threshold: int = 20
-    ):
+    @keyword_only
+    def set_params(self,
+        input_col=None,
+        output_col=None,
+        threshold=None
+    ): # pylint: disable=unused-argument
         """
-        Set the parameters of the transformer.
-
-        Args:
-            input_col (str): Name of the input column.
-            output_col (str): Name of the output column.
-            threshold (int): Threshold value for clipping.
+        Set kwargs parameters.
         """
         kwargs = self._input_kwargs
-        self._set(**kwargs)
+        self._set(**kwargs) # pylint: disable=not-a-mapping
 
     def get_input_col(self):
         """Get the name of the input column."""
@@ -107,11 +113,11 @@ class CategoryClipTransformer(
         """Get the threshold value for clipping."""
         return self.getOrDefault(self.threshold)
 
-    def _transform(self, df: DataFrame):
+    def _transform(self, dataset: DataFrame):
         """
         Apply the clipping logic to the input DataFrame.
 
-        Args:
+        Parameters:
             df (DataFrame): Input DataFrame.
 
         Returns:
@@ -121,29 +127,28 @@ class CategoryClipTransformer(
         output_col = self.get_output_col()
         threshold = self.get_threshold()
 
-        return df.withColumn(
+        return dataset.withColumn(
             output_col,
             when(col(input_col) >= threshold, threshold).otherwise(col(input_col)),
         )
 
 
-def with_weight_column(df):
+def with_weight_column(dataframe):
     """
     Add a weight column to the DataFrame based on class proportions.
 
-    Args:
-        df (DataFrame): Input DataFrame.
+    Parameters:
+        dataframe (DataFrame): Input DataFrame.
 
     Returns:
         DataFrame: DataFrame with an added weight column.
     """
-    df_copy = df.alias("df_copy")
+    df_copy = dataframe.alias("df_copy")
     class_counts = df_copy.groupBy("label").count()
     total_count = df_copy.count()
     class_proportions = class_counts.withColumn(
         "proportion", col("count") / total_count
     )
-    class_proportions.show()
     class_proportions_dict = {
         row["label"]: row["proportion"] for row in class_proportions.collect()
     }
@@ -166,7 +171,7 @@ def load_dataset(spark_session):
     """
     Load dataset from HDFS.
 
-    Args:
+    Parameters:
         spark_session (SparkSession): Spark session instance.
 
     Returns:
@@ -179,7 +184,7 @@ def preprocess_dataset(dataset):
     """
     Preprocess the dataset by applying feature selection, transformations, and encoding.
 
-    Args:
+    Parameters:
         dataset (DataFrame): Input dataset.
 
     Returns:
@@ -281,7 +286,7 @@ def preprocess_dataset(dataset):
     )
 
     # Define categorical and numerical columns
-    categoricalCols = [
+    categorical_cols = [
         "street",
         "city",
         "county",
@@ -291,8 +296,12 @@ def preprocess_dataset(dataset):
         "airport_code",
         "wind_direction",
         "weather_condition",
+        "sunrise_sunset",
+        "civil_twilight",
+        "nautical_twilight",
+        "astronomical_twilight",
     ]
-    numericalCols = [
+    numerical_cols = [
         "ecef_x",
         "ecef_y",
         "ecef_z",
@@ -323,27 +332,21 @@ def preprocess_dataset(dataset):
         "stop",
         "traffic_calming",
         "traffic_signal",
-        "sunrise_sunset",
-        "civil_twilight",
-        "nautical_twilight",
-        "astronomical_twilight",
     ]
 
     # Create String indexer for categorical columns
     indexers = [
-        StringIndexer(inputCol=c, outputCol=f"{c}_indexed", handleInvalid="error").fit(
-            data
-        )
-        for c in categoricalCols
+        StringIndexer(inputCol=c, outputCol=f"{c}_indexed", handleInvalid="error")
+        for c in categorical_cols
     ]
 
     # Clip categories
     clippers = [
-        CategoryClipTransformer(
+        CategoryClipTransformer( # pylint: disable=no-member
             input_col=indexer.getOutputCol(),
             output_col=f"{indexer.getOutputCol()}_clipped",
             threshold=20,
-        ).fit(data)
+        )
         for indexer in indexers
     ]
 
@@ -352,15 +355,15 @@ def preprocess_dataset(dataset):
         OneHotEncoder(
             inputCol=clipper.get_output_col(),
             outputCol=f"{clipper.get_output_col()}_encoded",
-        ).fit(data)
+        )
         for clipper in clippers
     ]
 
     # Assemble features
     assembler = VectorAssembler(
-        inputCols=[encoder.getOutputCol() for encoder in encoders] + numericalCols,
+        inputCols=[encoder.getOutputCol() for encoder in encoders] + numerical_cols,
         outputCol="features",
-    ).fit(data)
+    )
 
     # Transform the dataset
     transform_pipeline = Pipeline(stages=indexers + clippers + encoders + [assembler])
