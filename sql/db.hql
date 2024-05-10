@@ -44,7 +44,7 @@ CREATE EXTERNAL TABLE us_accidents1 (
     country STRING,
     timezone STRING,
     airport_code STRING,
-    weather_timestamp BIGINT,
+    weather_timestamp TIMESTAMP,
     temperature_f DOUBLE,
     wind_chill_f DOUBLE,
     humidity_percent DOUBLE,

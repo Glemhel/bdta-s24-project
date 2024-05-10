@@ -2,53 +2,52 @@
 Models definition and function for model training and evaluation.
 """
 
-from pprint import pprint
+import pprint
 
 from pyspark.ml.feature import PCA
 from pyspark.ml.classification import (
     LogisticRegression,
     DecisionTreeClassifier,
     RandomForestClassifier,
-    GBTClassifier,
     OneVsRest,
 )
 from pyspark.ml import Pipeline
 from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
 
-from data_utils import run_os_command
+from data_utils import run_os_command, custom_log # pylint: disable=import-error
 
-def make_model1(total_features=199):
+def make_model1(total_features=197):
     """
     Creates a machine learning pipeline with PCA and Logistic Regression.
 
     Parameters:
-    - total_features (int): The total number of features in the dataset. Default is 199.
+    - total_features (int): The total number of features in the dataset. Default is 197.
 
     Returns:
     - Tuple: A tuple containing the model and the parameter grid.
     """
     pca = PCA(k=50, inputCol="features", outputCol="pcaFeatures")
-    log_reg = LogisticRegression(featuresCol="pcaFeatures", outputCol="label")
+    log_reg = LogisticRegression(featuresCol="pcaFeatures", labelCol="label", maxIter=10)
 
     model = Pipeline(stages=[pca, log_reg])
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [50, 100, total_features])
-       .addGrid(log_reg.aggregationDepth, [2, 3, 4])
-       .addGrid(log_reg.regParam, [0, 0.001, 0.1, 1])
+        grid.addGrid(pca.k, [total_features])
+    #    .addGrid(log_reg.aggregationDepth, [2, 3, 4])
+    #    .addGrid(log_reg.regParam, [0, 0.001, 0.1, 1])
        .build()
     )
 
     return model, grid
 
 
-def make_model2(total_features=199):
+def make_model2(total_features=197):
     """
     Creates a machine learning pipeline with PCA and Decision Tree Classifier.
 
     Parameters:
-    - total_features (int): The total number of features in the dataset. Default is 199.
+    - total_features (int): The total number of features in the dataset. Default is 197.
 
     Returns:
     - Tuple: A tuple containing the model and the parameter grid.
@@ -60,21 +59,21 @@ def make_model2(total_features=199):
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [50, 100, total_features])
-      .addGrid(dtc.maxDepth, [5, 10])
-      .addGrid(dtc.impurity, ["gini", "entropy"])
+        grid.addGrid(pca.k, [total_features])
+    #   .addGrid(dtc.maxDepth, [5, 10])
+    #   .addGrid(dtc.impurity, ["gini", "entropy"])
       .build()
     )
 
     return model, grid
 
 
-def make_model3(total_features=199):
+def make_model3(total_features=197):
     """
     Creates a machine learning pipeline with PCA and Random Forest Classifier.
 
     Parameters:
-    - total_features (int): The total number of features in the dataset. Default is 199.
+    - total_features (int): The total number of features in the dataset. Default is 197.
 
     Returns:
     - Tuple: A tuple containing the model and the parameter grid.
@@ -86,36 +85,37 @@ def make_model3(total_features=199):
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [50, 100, total_features])
-        .addGrid(rfc.maxDepth, [5, 10])
-        .addGrid(rfc.numTrees, [5, 10])
-        .addGrid(rfc.impurity, ["gini", "entropy"])
+        grid.addGrid(pca.k, [total_features])
+        # .addGrid(rfc.maxDepth, [5, 10])
+        # .addGrid(rfc.numTrees, [5, 10])
+        # .addGrid(rfc.impurity, ["gini", "entropy"])
         .build()
     )
 
     return model, grid
 
 
-def make_model4(total_features=199):
+def make_model4(total_features=197):
     """
-    Creates a machine learning pipeline with PCA and Gradient Boosted Trees using OneVsRest.
+    Creates a machine learning pipeline with PCA and Logistic Regression using OneVsRest.
 
     Parameters:
-    - total_features (int): The total number of features in the dataset. Default is 199.
+    - total_features (int): The total number of features in the dataset. Default is 197.
 
     Returns:
     - Tuple: A tuple containing the model and the parameter grid.
     """
     pca = PCA(k=50, inputCol="features", outputCol="pcaFeatures")
-    gbt = GBTClassifier(featuresCol="pcaFeatures", labelCol="label")
-    ovr = OneVsRest(classifier=gbt)
+    log_reg = LogisticRegression(featuresCol="pcaFeatures", labelCol="label", maxIter=10)
+    ovr = OneVsRest(classifier=log_reg)
 
     model = Pipeline(stages=[pca, ovr])
 
     grid = ParamGridBuilder()
     grid = (
-        grid.addGrid(pca.k, [50, 100, total_features])
-        .addGrid(gbt.maxDepth, [3, 5])
+        grid.addGrid(pca.k, [total_features])
+    #    .addGrid(log_reg.aggregationDepth, [2, 3, 4])
+    #    .addGrid(log_reg.regParam, [0, 0.001, 0.1, 1])
         .build()
     )
 
@@ -158,15 +158,16 @@ def print_and_save_model(model, model_id):
     - model (Model): The Spark ML model to be printed and saved.
     - model_id (str): The identifier for the model file name.
     """
-    pprint(model.extractParamMap())
+    custom_log(pprint.pformat(model.stages))
 
     model.write().overwrite().save(f"project/models/model{model_id}")
-    run_os_command(f"hdfs dfs -get project/models/model1 models/model{model_id}")
+    run_os_command(f"hdfs dfs -get project/models/model{model_id} models/model{model_id}")
 
 
-def evaluate_model(model, test_data, evaluators):
+def evaluate_model(model, model_id, test_data, evaluators):
     """
     Evaluates a model on test data using a list of evaluators.
+    Saves model prediction to HDFS and disk.
 
     Parameters:
     - model (Model): The Spark ML model to be evaluated.
@@ -177,6 +178,19 @@ def evaluate_model(model, test_data, evaluators):
     - List: A list of evaluation results.
     """
     predictions = model.transform(test_data)
+
+    predictions.select("label", "prediction")\
+        .coalesce(1)\
+        .write\
+        .mode("overwrite")\
+        .format("csv")\
+        .option("sep", ",")\
+        .option("header","true")\
+        .save(f"project/output/model{model_id}_predictions.csv")
+
+    # Run it from root directory of the repository
+    run_os_command(f"hdfs dfs -cat project/output/model{model_id}_predictions.csv/*.csv " +
+        f"> output/model{model_id}_predictions.csv")
     results = []
     for evaluator in evaluators:
         results.append(evaluator.evaluate(predictions))

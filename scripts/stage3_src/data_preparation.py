@@ -29,7 +29,7 @@ from pyspark.ml.param.shared import (
 )
 from pyspark.sql.functions import lit
 
-from data_utils import ecef_udf_currying
+from data_utils import ecef_udf_currying # pylint: disable=import-error
 
 
 class CategoryClipTransformer(

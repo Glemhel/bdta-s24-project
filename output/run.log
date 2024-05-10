@@ -1,0 +1,19 @@
+2024-05-10 10:24:42: Stage 3. Python script started
+2024-05-10 10:24:59: Stage 3. Initialized spark.
+2024-05-10 10:25:01: Stage 3. Loading dataset.
+2024-05-10 10:25:01: Stage 3. Preprocessing dataset.
+2024-05-10 10:25:50: Stage 3. Saving train and test to disk.
+2024-05-10 10:26:06: Stage 3. Creating models.
+2024-05-10 10:26:06: Stage 3. Running model: PCA+LogReg.
+2024-05-10 10:27:04: Stage 3. Running model: PCA+DecisionTrees.
+2024-05-10 10:27:53: Stage 3. Running model: PCA+RandomForest.
+2024-05-10 10:28:43: Stage 3. Running model: PCA+LogReg+OvR.
+2024-05-10 10:31:15: Stage 3. Running evaluation.
+2024-05-10 10:31:15: [PCAModel: uid=PCA_2e08454758a2, k=197,
+ LogisticRegressionModel: uid=LogisticRegression_18b16cbf2feb, numClasses=5, numFeatures=197]
+2024-05-10 10:31:46: [PCAModel: uid=PCA_95aec2d4a87a, k=197,
+ DecisionTreeClassificationModel: uid=DecisionTreeClassifier_c6d22ee00eaf, depth=5, numNodes=37, numClasses=5, numFeatures=197]
+2024-05-10 10:32:15: [PCAModel: uid=PCA_a96366c1dbe0, k=197,
+ RandomForestClassificationModel: uid=RandomForestClassifier_f324b51c8710, numTrees=20, numClasses=5, numFeatures=197]
+2024-05-10 10:32:43: [PCAModel: uid=PCA_e849c8867ae6, k=197, OneVsRestModel_f75690be4e88]
+2024-05-10 10:33:23: Stage 3. Saving comparison results.

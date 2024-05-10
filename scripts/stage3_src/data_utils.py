@@ -4,6 +4,7 @@ Utility functions for geospatial transformations and dataset management.
 
 import os
 import math
+import datetime
 
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import udf
@@ -98,3 +99,13 @@ def save_dataset(dataset: DataFrame, name: str) -> None:
 
     # Consolidate the JSON file to local storage
     run_os_command(f"hdfs dfs -cat project/data/{name}/*.json > data/{name}.json")
+
+
+def custom_log(message):
+    """
+    Write log message to file.
+    """
+    current_time = str(datetime.datetime.now()).split('.', maxsplit=1)[0]
+    with open("output/run.log", "a", encoding="utf-8") as file:
+        file.write(f"{current_time}: {message}")
+        file.write("\n")
